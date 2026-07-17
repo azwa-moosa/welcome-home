@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HOME.</title>
+<meta name="description" content="A quiet place to return to yourself.">
+<script>
+  // Set the mood before first paint, so there is no flash.
+  (function () {
+    var h = new Date().getHours();
+    var theme = (h < 6 || h >= 19) ? 'dark' : 'light';
+    var period = h < 5 ? 'night' : h < 8 ? 'dawn' : h < 17 ? 'day' : h < 20 ? 'dusk' : 'night';
+    var r = document.documentElement;
+    r.setAttribute('data-theme', theme);
+    r.setAttribute('data-period', period);
+  })();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --serif: "Fraunces", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --ease: cubic-bezier(.2, .7, .2, 1);
+  }
+
+  html[data-theme="light"] {
+    --bg-top: #f5f0e7;
+    --bg-bottom: #ece1cf;
+    --glow: rgba(255, 210, 170, 0.55);
+    --ink: #2c2722;
+    --ink-soft: #6f645760;
+    --ink-mid: #7c7064;
+    --line: rgba(60, 50, 40, 0.12);
+    --card: rgba(255, 253, 248, 0.42);
+    --card-brd: rgba(255, 255, 255, 0.55);
+    --accent: #bd8163;
+    --mote: rgba(190, 150, 100, 0.5);
+    --grain: 0.055;
+  }
+  html[data-theme="dark"] {
+    --bg-top: #13151d;
+    --bg-bottom: #1b1e29;
+    --glow: rgba(120, 138, 214, 0.26);
+    --ink: #eae6dd;
+    --ink-soft: #a7a2b070;
+    --ink-mid: #9a95a6;
+    --line: rgba(255, 255, 255, 0.10);
+    --card: rgba(255, 255, 255, 0.045);
+    --card-brd: rgba(255, 255, 255, 0.10);
+    --accent: #b8c1ff;
+    --mote: rgba(200, 210, 255, 0.5);
+    --grain: 0.085;
+  }
+  /* Gentle time-of-day tint on the light glow. */
+  html[data-theme="light"][data-period="dawn"] { --glow: rgba(255, 192, 186, 0.52); }
+  html[data-theme="light"][data-period="day"]  { --glow: rgba(255, 214, 172, 0.50); }
+  html[data-theme="light"][data-period="dusk"] { --glow: rgba(255, 178, 128, 0.52); }
+  html[data-theme="dark"][data-period="dawn"]  { --glow: rgba(210, 150, 170, 0.24); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body { height: 100%; }
+
+  body {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg-bottom);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    transition: color .8s var(--ease);
+  }
+
+  /* Layered atmosphere: a soft gradient with a slow-drifting warm glow. */
+  #sky {
+    position: fixed; inset: 0; z-index: -3;
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--glow) 0%, transparent 55%),
+      linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+    transition: background 1.2s var(--ease);
+    animation: drift 34s ease-in-out infinite alternate;
+  }
+  @keyframes drift {
+    from { background-position: 0 0, 0 0; }
+    to   { background-position: 6% 3%, 0 0; }
+  }
+
+  /* Film grain. */
+  #grain {
+    position: fixed; inset: -50%; z-index: -2; pointer-events: none;
+    opacity: var(--grain);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  #motes { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
+
+  /* ---- Top bar ---- */
+  .bar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 20;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: clamp(16px, 3vw, 26px) clamp(18px, 4vw, 38px);
+  }
+  .mark {
+    font-family: var(--serif); font-weight: 500; letter-spacing: .14em;
+    font-size: 0.82rem; color: var(--ink-mid);
+    background: none; border: 0; cursor: pointer; padding: 6px 0;
+    transition: color .5s var(--ease), opacity .5s var(--ease); opacity: .8;
+  }
+  .mark:hover { color: var(--ink); opacity: 1; }
+  .tools { display: flex; gap: 10px; align-items: center; position: relative; }
+  .tool {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: grid; place-items: center; cursor: pointer;
+    color: var(--ink-mid);
+    background: var(--card);
+    border: 1px solid var(--card-brd);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    transition: color .4s var(--ease), transform .4s var(--ease), background .4s;
+  }
+  .tool:hover { color: var(--ink); transform: translateY(-1px); }
+  .tool svg { width: 19px; height: 19px; }
+  .tool .moon { display: none; }
+  html[data-theme="dark"] .tool .sun { display: none; }
+  html[data-theme="dark"] .tool .moon { display: block; }
+
+  .amb-menu {
+    position: absolute; top: 50px; right: 0;
+    background: var(--card); border: 1px solid var(--card-brd);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+    border-radius: 16px; padding: 8px; min-width: 148px;
+    display: flex; flex-direction: column; gap: 2px;
+    opacity: 0; transform: translateY(-6px) scale(.98); pointer-events: none;
+    transition: opacity .35s var(--ease), transform .35s var(--ease);
+    box-shadow: 0 20px 50px -24px rgba(0,0,0,.35);
+  }
+  .amb-menu.open { opacity: 1; transform: none; pointer-events: auto; }
+  .amb-menu button {
+    text-align: left; background: none; border: 0; cursor: pointer;
+    font-family: var(--sans); font-size: 0.9rem; color: var(--ink-mid);
+    padding: 9px 12px; border-radius: 10px;
+    transition: background .3s, color .3s;
+  }
+  .amb-menu button:hover { background: rgba(128,128,128,.10); color: var(--ink); }
+  .amb-menu button[aria-pressed="true"] { color: var(--ink); }
+  .amb-menu button[aria-pressed="true"]::after { content: " ·"; color: var(--accent); }
+
+  /* ---- Stage ---- */
+  main {
+    min-height: 100svh; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 120px clamp(24px, 6vw, 40px) 96px;
+    text-align: center;
+  }
+  .stage { width: 100%; max-width: 660px; }
+
+  .kicker {
+    font-family: var(--sans); text-transform: lowercase;
+    letter-spacing: .34em; font-size: 0.72rem; font-weight: 400;
+    color: var(--ink-mid); margin-bottom: 22px; padding-left: .34em;
+  }
+  .lead {
+    font-family: var(--serif); font-weight: 300; font-style: italic;
+    font-size: clamp(1.15rem, 2.6vw, 1.5rem);
+    color: var(--ink-mid); line-height: 1.5; margin-bottom: 40px;
+    max-width: 32ch; margin-left: auto; margin-right: auto;
+  }
+
+  /* Big intro word */
+  .home-word {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(3.4rem, 15vw, 7rem); letter-spacing: -.02em;
+    line-height: .95; margin-bottom: 34px;
+  }
+  .home-sub {
+    font-family: var(--serif); font-weight: 300; font-style: italic;
+    font-size: clamp(1.15rem, 3vw, 1.6rem); color: var(--ink-mid);
+    line-height: 1.55; max-width: 26ch; margin: 0 auto 48px;
+  }
+
+  /* Generated lines */
+  .items { list-style: none; display: flex; flex-direction: column; gap: 18px; margin-bottom: 40px; }
+  .items li {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(1.3rem, 3.6vw, 1.85rem); line-height: 1.4;
+    color: var(--ink);
+    opacity: 0; transform: translateY(10px);
+    animation: rise .9s var(--ease) forwards;
+  }
+
+  .single {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(1.6rem, 4.6vw, 2.35rem); line-height: 1.42;
+    color: var(--ink); max-width: 24ch; margin: 0 auto 40px;
+    opacity: 0; transform: translateY(10px); animation: rise 1s var(--ease) forwards;
+  }
+
+  .vignette { margin-bottom: 40px; }
+  .vignette .line { font-family: var(--serif); font-size: clamp(1.35rem, 3.8vw, 1.9rem); line-height: 1.42; opacity: 0; transform: translateY(10px); animation: rise .9s var(--ease) forwards; }
+  .vignette .place { color: var(--accent); font-style: italic; }
+  .vignette .now {
+    margin-top: 26px; font-family: var(--sans); font-size: 0.88rem;
+    letter-spacing: .04em; color: var(--ink-mid);
+    opacity: 0; animation: fade 1.2s var(--ease) .5s forwards;
+  }
+
+  /* Note chapter */
+  .note-box { display: flex; flex-direction: column; gap: 16px; margin-bottom: 26px; }
+  #noteInput {
+    font-family: var(--serif); font-size: clamp(1.15rem, 3vw, 1.4rem); font-style: italic;
+    color: var(--ink); text-align: center; resize: none;
+    background: var(--card); border: 1px solid var(--card-brd); border-radius: 18px;
+    padding: 22px 20px; width: 100%; min-height: 96px;
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    transition: border-color .4s;
+  }
+  #noteInput:focus { outline: none; border-color: var(--accent); }
+  #noteInput::placeholder { color: var(--ink-mid); opacity: .7; }
+  .whisper { font-family: var(--sans); font-size: 0.78rem; color: var(--ink-mid); letter-spacing: .02em; margin-bottom: 34px; opacity: .85; }
+
+  .strangers { display: flex; flex-direction: column; gap: 14px; margin-bottom: 8px; }
+  .strangers .card {
+    font-family: var(--serif); font-style: italic; font-size: clamp(1.05rem, 2.8vw, 1.25rem);
+    color: var(--ink-mid); padding: 16px 20px; border-radius: 14px;
+    background: var(--card); border: 1px solid var(--line);
+    opacity: 0; transform: translateY(8px); animation: rise .8s var(--ease) forwards;
+  }
+  .strangers .card.mine { color: var(--ink); border-color: var(--accent); }
+
+  /* ---- Controls ---- */
+  .refresh {
+    background: none; border: 0; cursor: pointer; font-family: var(--sans);
+    font-size: 0.82rem; letter-spacing: .04em; color: var(--ink-mid);
+    padding: 8px 4px; margin-bottom: 30px;
+    border-bottom: 1px solid transparent; transition: color .4s, border-color .4s;
+  }
+  .refresh:hover { color: var(--ink); border-color: var(--line); }
+
+  .nav { display: flex; align-items: center; justify-content: center; gap: 28px; margin-top: 6px; }
+  .back {
+    background: none; border: 0; cursor: pointer; font-family: var(--sans);
+    font-size: 0.85rem; color: var(--ink-mid); letter-spacing: .02em;
+    padding: 10px; transition: color .4s;
+  }
+  .back:hover { color: var(--ink); }
+  .btn {
+    font-family: var(--sans); font-size: 0.92rem; font-weight: 400; letter-spacing: .03em;
+    color: var(--ink); cursor: pointer;
+    background: var(--card); border: 1px solid var(--card-brd);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    padding: 14px 34px; border-radius: 100px;
+    transition: transform .5s var(--ease), background .5s, border-color .5s, box-shadow .5s;
+    box-shadow: 0 14px 40px -26px rgba(0,0,0,.5);
+  }
+  .btn:hover { transform: translateY(-2px); border-color: var(--accent); }
+
+  /* Breathing orb behind the intro button */
+  .orb-wrap { position: relative; display: inline-grid; place-items: center; }
+  .orb {
+    position: absolute; width: 220px; height: 220px; border-radius: 50%;
+    background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+    filter: blur(6px); z-index: -1;
+    animation: breathe 7s ease-in-out infinite;
+  }
+
+  /* Faint orientation dots — a quiet map of the rooms, not a score. */
+  .dots { position: fixed; bottom: clamp(20px, 4vh, 34px); left: 0; right: 0; z-index: 15;
+    display: flex; gap: 9px; justify-content: center; align-items: center; opacity: 0; transition: opacity .8s var(--ease); }
+  .dots.show { opacity: 1; }
+  .dots button { width: 6px; height: 6px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+    background: var(--ink-mid); opacity: .28; transition: opacity .4s, transform .4s; }
+  .dots button:hover { opacity: .6; }
+  .dots button.on { opacity: .95; transform: scale(1.5); background: var(--accent); }
+
+  footer {
+    position: fixed; bottom: clamp(14px, 3vh, 22px); left: 0; right: 0; z-index: 5;
+    text-align: center; font-family: var(--serif); font-style: italic; font-weight: 300;
+    font-size: 0.86rem; color: var(--ink-mid); opacity: .7; padding: 0 24px;
+    pointer-events: none;
+  }
+  /* When dots are visible, lift the footer greeting out of the way. */
+  body.in-journey footer { bottom: unset; top: clamp(56px, 8vh, 72px); }
+
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  @keyframes fade { to { opacity: 1; } }
+  @keyframes breathe { 0%,100% { transform: scale(1); opacity: .85; } 50% { transform: scale(1.09); opacity: 1; } }
+
+  .screen { animation: screenIn 1s var(--ease) both; }
+  @keyframes screenIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+
+  noscript .single { animation: none; opacity: 1; transform: none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    #sky, .orb { animation: none !important; }
+    .items li, .single, .vignette .line, .vignette .now, .strangers .card { animation-duration: .01ms; opacity: 1; transform: none; }
+    .screen { animation-duration: .01ms; }
+    #motes { display: none; }
+  }
+</style>
+</head>
+<body>
+  <div id="sky"></div>
+  <div id="grain"></div>
+  <canvas id="motes"></canvas>
+
+  <div class="bar">
+    <button class="mark" data-act="restart" aria-label="Return to the beginning">HOME</button>
+    <div class="tools">
+      <button class="tool" data-act="theme" aria-label="Switch between sunrise and moonlight" title="Sunrise / moonlight">
+        <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+        <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      </button>
+      <button class="tool" data-act="sound" aria-label="Ambient sound" aria-haspopup="true" title="Ambience">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H3v6h3l5 4V5z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a9 9 0 0 1 0 12" opacity=".5"/></svg>
+      </button>
+      <div class="amb-menu" id="ambMenu" role="menu" aria-label="Choose ambience">
+        <button data-act="amb" data-amb="off" aria-pressed="true" role="menuitem">Quiet</button>
+        <button data-act="amb" data-amb="rain" aria-pressed="false" role="menuitem">Rain</button>
+        <button data-act="amb" data-amb="ocean" aria-pressed="false" role="menuitem">Ocean</button>
+        <button data-act="amb" data-amb="wind" aria-pressed="false" role="menuitem">Wind</button>
+        <button data-act="amb" data-amb="hush" aria-pressed="false" role="menuitem">Hush</button>
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <div class="stage" id="stage" aria-live="polite">
+      <noscript>
+        <p class="single" style="opacity:1">You’re here. That’s enough for now.<br><br>Notice where the light lands. Feel the chair carrying your weight. Take one slow breath.<br><br>The world can wait a little longer.</p>
+      </noscript>
+    </div>
+  </main>
+
+  <div class="dots" id="dots" aria-hidden="true"></div>
+  <footer id="greeting"></footer>
+
+<script>
+/* ============================================================
+   HOME. — a quiet place to return to yourself.
+   Single file. No accounts, no tracking, nothing saved.
+   Every visit is gently reshuffled so no two feel the same.
+   ============================================================ */
+
+const $ = s => document.querySelector(s);
+const stage = $('#stage');
+
+/* ---------- The words ---------- */
+const POOLS = {
+  look: [
+    "Notice where the light lands.",
+    "Find something older than you.",
+    "Look for the softest colour in the room.",
+    "Notice one imperfect thing, and let it be.",
+    "Find something that has quietly stayed with you for years.",
+    "Look for a shadow you’ve never noticed before.",
+    "Find something that makes this place feel like yours.",
+    "Notice the furthest thing you can see from here.",
+    "Find something someone once touched with care.",
+    "Look for a straight line, then a curve.",
+    "Notice something small holding something larger.",
+    "Find the warmest colour within reach.",
+    "Look for something that has waited patiently for you.",
+    "Notice where two different materials meet.",
+    "Find something that was once a gift.",
+    "Look for the quietest corner of the room.",
+    "Find a texture you’d want to touch.",
+    "Notice the space between things, not just the things.",
+    "Find something you’ve walked past a hundred times.",
+    "Look for a colour you don’t have a name for.",
+    "Notice something that catches light without trying.",
+    "Find something that has never once let you down."
+  ],
+  feel: [
+    "Notice where your clothes touch your skin.",
+    "Feel the chair carrying your weight.",
+    "Notice the temperature of your hands.",
+    "Feel your feet against the floor.",
+    "Notice where your breathing reaches, and where it stops.",
+    "Feel the air moving across your face.",
+    "Rest a hand over your heart, and leave it there a moment.",
+    "Feel the warmth of whatever you’re holding.",
+    "Notice the weight of your own shoulders.",
+    "Feel the ground holding you up, as it always has.",
+    "Notice the small movements you make without deciding to.",
+    "Feel the difference between your left hand and your right.",
+    "Notice the parts of you that are already at rest.",
+    "Feel your jaw, and let it soften.",
+    "Notice the surface beneath your hands.",
+    "Feel how your breath moves your chest, gently."
+  ],
+  listen: [
+    "A fan, somewhere.",
+    "Rain, near or far.",
+    "Someone laughing in another room.",
+    "Birds that started without you.",
+    "Traffic, carrying people home.",
+    "The silence underneath everything.",
+    "Your own breathing.",
+    "Keys, footsteps, a door.",
+    "Wind finding its way around the building.",
+    "The hum of something electric.",
+    "The world outside your window, going on.",
+    "A clock, or a heartbeat, keeping time.",
+    "Water, running somewhere.",
+    "The sound a room makes when no one speaks.",
+    "A voice you can’t quite make out.",
+    "Something far away you’d usually ignore."
+  ],
+  breathe: [
+    "Fresh coffee.",
+    "Rain on warm ground.",
+    "Soap, clean and plain.",
+    "The smell of books.",
+    "Your pillow.",
+    "Fresh laundry.",
+    "Early morning air.",
+    "Tea, steeping.",
+    "The particular smell of this room.",
+    "Clean air after a window opens.",
+    "Something cooking, somewhere.",
+    "The outside, carried in on your clothes."
+  ],
+  taste: [
+    "Water.",
+    "Tea, cooling.",
+    "Coffee, still warm.",
+    "Mint.",
+    "Something sweet.",
+    "A piece of fruit.",
+    "Chocolate, slowly.",
+    "Nothing at all — and noticing that counts.",
+    "The taste of your own breath, settling."
+  ],
+  heart: [
+    "You don’t have to solve your whole life today.",
+    "Rest is productive.",
+    "Feelings are not deadlines.",
+    "You survived every day that brought you here.",
+    "You’re allowed to miss someone without chasing them.",
+    "Being tired isn’t failure.",
+    "You are not behind.",
+    "Today only asks you to arrive.",
+    "You are allowed to begin again.",
+    "Healing isn’t something you earn.",
+    "You can be a work in progress and still be enough.",
+    "Not every feeling needs fixing. Some just need to be felt.",
+    "You are doing better than the voice in your head admits.",
+    "You don’t owe anyone your exhaustion.",
+    "That it’s hard doesn’t mean you’re doing it wrong.",
+    "You’re allowed to take up space, and time.",
+    "Softness is not weakness.",
+    "You can let today be small.",
+    "Some days, staying is the brave thing.",
+    "You are more than the worst thing you’re worried about.",
+    "It’s okay to not know yet.",
+    "You’re allowed to change your mind about your own life.",
+    "Slow is still forward.",
+    "You don’t have to earn your own kindness.",
+    "Whatever happens, you’ll meet it when it comes — not before."
+  ],
+  notice: [
+    "The way automatic doors seem to know you’re coming.",
+    "Airports somehow smell the same everywhere.",
+    "The small shadow beneath your cup.",
+    "The exact shape of today’s clouds, which will never happen again.",
+    "Someone, somewhere, is boarding a plane right now.",
+    "The particular quiet that comes after rain.",
+    "Your reflection, faint, in the window.",
+    "Dust drifting through a beam of sunlight.",
+    "Someone else is looking at the moon tonight.",
+    "The last page of the day is still being written.",
+    "A stranger just laughed at something you’ll never hear.",
+    "Steam curling off something warm.",
+    "The light is different than it was an hour ago.",
+    "Somewhere a kettle is just beginning to sing.",
+    "A plant is turning, slowly, toward a window.",
+    "The pause between two songs.",
+    "Someone is arriving home as someone else leaves.",
+    "The way a room holds warmth after the sun moves on.",
+    "Rain is falling somewhere you’ve never been.",
+    "A page you turned once is still exactly where you left it."
+  ],
+  move: [
+    "Drink a little water.",
+    "Stretch, just once, however you like.",
+    "Open a window.",
+    "Step outside for two minutes.",
+    "Smile at someone, or at nothing.",
+    "Look up from the screen.",
+    "Water a plant.",
+    "Wash your face with cool water.",
+    "Stand somewhere the light reaches.",
+    "Watch one bird for as long as it stays.",
+    "Take one slow, deep breath.",
+    "Roll your shoulders back, and down.",
+    "Put your feet flat and feel the floor.",
+    "Unclench your hands.",
+    "Let your eyes rest on something far away.",
+    "Tidy one small thing, and stop there."
+  ],
+  capture: [
+    "Photograph something that stayed.",
+    "Photograph the light, wherever it is.",
+    "Photograph what peace looks like right now.",
+    "Photograph waiting.",
+    "Photograph what “home” means to you today.",
+    "Photograph a small kindness.",
+    "Photograph silence.",
+    "Photograph something ordinary you’d miss if it were gone.",
+    "Photograph the softest thing you can find.",
+    "Photograph what the morning left behind.",
+    "Photograph a shadow you like.",
+    "Photograph something that survived.",
+    "Photograph the colour of this hour.",
+    "Photograph stillness.",
+    "Photograph something you want to remember about today."
+  ]
+};
+
+const PLACES = [
+  ["Kyoto", "Right now, it might be raining in Kyoto.", "Someone is reading before bed. The world kept turning today."],
+  ["Reykjavík", "In Reykjavík, the wind is doing what it always does.", "Someone is boiling water for tea, unbothered."],
+  ["Lisbon", "Somewhere in Lisbon, light is falling on old tiles.", "A tram is carrying strangers gently uphill."],
+  ["Nairobi", "In Nairobi, the day is finding its rhythm.", "Someone is greeting a neighbour by name."],
+  ["Hanoi", "In Hanoi, steam is rising from a bowl on a small street.", "Motorbikes move like a slow, patient river."],
+  ["Bergen", "In Bergen, it’s probably raining, softly.", "Someone left a lamp on for whoever comes home."],
+  ["Malé", "In Malé, the sea is holding the whole island up.", "A ferry is crossing water it has crossed ten thousand times."],
+  ["Istanbul", "In Istanbul, gulls are circling between two continents.", "Tea is being poured, again, for someone who just arrived."],
+  ["Vancouver", "In Vancouver, the mountains are wearing cloud.", "Someone is walking a dog that is deeply, simply happy."],
+  ["Marrakech", "In Marrakech, the light is the colour of warm sand.", "Somewhere a courtyard is quiet and cool."],
+  ["Helsinki", "In Helsinki, the light is soft and low.", "Someone is sitting by a window, doing nothing at all."],
+  ["Seoul", "In Seoul, a small shop glows on a quiet corner.", "Someone is heading home a little later than planned."],
+  ["Oaxaca", "In Oaxaca, something is simmering slowly.", "The evening is in no hurry to arrive."],
+  ["Galway", "In Galway, the rain is more of a suggestion.", "Music is starting up somewhere warm."],
+  ["Cape Town", "In Cape Town, the wind has opinions today.", "The ocean is exactly where they left it."],
+  ["Ubud", "In Ubud, the green goes on further than you can see.", "Somewhere, water is running over stone."]
+];
+
+const NOTES_SEED = [
+  "I made it through today.",
+  "I finally slept.",
+  "I miss my grandmother.",
+  "I feel okay. That’s new.",
+  "I’m trying. That has to count.",
+  "I let myself rest and the world didn’t end.",
+  "I’m still here.",
+  "I forgave myself a little.",
+  "Today was hard and I stayed anyway.",
+  "I drank water and opened a window. Small wins.",
+  "I’m proud of myself for something small.",
+  "I said no, and it was okay.",
+  "I let it be enough.",
+  "Somewhere, this helped. Thank you.",
+  "I looked up and the sky was doing fine.",
+  "I’m learning to be gentle with myself.",
+  "I made someone laugh today.",
+  "I chose to keep going."
+];
+
+const GREETINGS = [
+  "I’m glad you made it here.",
+  "You don’t have to rush today.",
+  "Some days, arriving is enough.",
+  "Welcome back.",
+  "You’ve been missed by this quiet little corner of the internet.",
+  "Take your time. Nothing here is in a hurry.",
+  "However today has been, you’re here now.",
+  "There’s no wrong way to be here.",
+  "Stay as long as you like.",
+  "Whatever you’re carrying, you can set it down a minute."
+];
+
+const CHAPTERS = [
+  { key:'look',    name:'Look',    lead:'Five things still holding the world together.', count:5 },
+  { key:'feel',    name:'Feel',    lead:'Four reminders that you’re here.',              count:4 },
+  { key:'listen',  name:'Listen',  lead:'Three sounds that never asked anything of you.',count:3 },
+  { key:'breathe', name:'Breathe', lead:'Two scents that belong to this moment.',        count:2 },
+  { key:'taste',   name:'Taste',   lead:'One taste, reminding you that you’re alive.',   count:1 },
+  { key:'heart',   name:'Heart',   lead:'A moment, for something true.',                 count:1 },
+  { key:'notice',  name:'Notice',  lead:'One ordinary thing.',                           count:1 },
+  { key:'move',    name:'Move',    lead:'One small, kind thing — never a task.',         count:1 },
+  { key:'capture', name:'Capture', lead:'One thing to photograph, if you like. The looking is the point.', count:1 },
+  { key:'else',    name:'Somewhere else', lead:'A little perspective, gently.', special:'else' },
+  { key:'note',    name:'Your note',      lead:'One sentence, if you have one.', special:'note' }
+];
+const N = CHAPTERS.length;
+
+/* ---------- Non-repeating shuffle bags ---------- */
+class Bag {
+  constructor(items){ this.items = items.slice(); this.q = []; this.last = null; this._fill(); }
+  _fill(){
+    const s = this.items.slice();
+    for (let i = s.length - 1; i > 0; i--){ const j = (Math.random() * (i + 1)) | 0; [s[i], s[j]] = [s[j], s[i]]; }
+    if (this.last !== null && s[0] === this.last && s.length > 1) s.push(s.shift());
+    this.q = s;
+  }
+  draw(n = 1){
+    const out = [];
+    while (out.length < n){
+      if (!this.q.length) this._fill();
+      const v = this.q.shift();
+      if (!out.includes(v)){ out.push(v); this.last = v; }
+    }
+    return out;
+  }
+}
+const bags = {};
+for (const k in POOLS) bags[k] = new Bag(POOLS[k]);
+const placeBag = new Bag(PLACES.map((_, i) => i));
+
+/* ---------- State ---------- */
+let step = 0;               // 0 = intro, 1..N = chapters, N+1 = outro
+const sessionNotes = [];    // notes left this visit (never saved anywhere)
+
+/* ---------- Helpers ---------- */
+const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+function itemsHTML(list){
+  return '<ul class="items">' + list.map((t, i) =>
+    `<li style="animation-delay:${i * 0.14 + 0.1}s">${esc(t)}</li>`).join('') + '</ul>';
+}
+function navHTML(nextLabel, canBack){
+  const back = canBack ? '<button class="back" data-act="prev">Back</button>' : '';
+  return `<div class="nav">${back}<button class="btn" data-act="next">${nextLabel}</button></div>`;
+}
+
+/* ---------- Screen renderers ---------- */
+function renderIntro(){
+  stage.innerHTML = `
+    <div class="screen">
+      <h1 class="home-word" tabindex="-1">HOME.</h1>
+      <p class="home-sub">You don’t have to feel okay before you begin.<br>You only have to be here.</p>
+      <div class="orb-wrap"><span class="orb" aria-hidden="true"></span>
+        <button class="btn" data-act="next">Come home</button>
+      </div>
+    </div>`;
+}
+
+function renderChapter(){
+  const ch = CHAPTERS[step - 1];
+  if (ch.special === 'else') return renderElse(ch);
+  if (ch.special === 'note') return renderNote(ch);
+
+  const list = bags[ch.key].draw(ch.count);
+  const body = ch.count > 1 ? itemsHTML(list)
+    : `<p class="single">${esc(list[0])}</p>`;
+  const isLast = step === N;
+  stage.innerHTML = `
+    <div class="screen">
+      <div class="kicker" tabindex="-1">${ch.name}</div>
+      <p class="lead">${esc(ch.lead)}</p>
+      <div id="dyn">${body}</div>
+      <button class="refresh" data-act="regen">Show me others</button>
+      ${navHTML(isLast ? 'I’m ready to rest' : 'Continue', true)}
+    </div>`;
+}
+
+function refreshChapterBody(){
+  const ch = CHAPTERS[step - 1];
+  const list = bags[ch.key].draw(ch.count);
+  $('#dyn').innerHTML = ch.count > 1 ? itemsHTML(list) : `<p class="single">${esc(list[0])}</p>`;
+}
+
+function renderElse(ch){
+  const idx = placeBag.draw(1)[0];
+  const [place, l1, l2] = PLACES[idx];
+  const now = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  stage.innerHTML = `
+    <div class="screen">
+      <div class="kicker" tabindex="-1">${ch.name}</div>
+      <p class="lead">${esc(ch.lead)}</p>
+      <div class="vignette" id="dyn">
+        <p class="line" style="animation-delay:.1s">${l1.replace(place, `<span class="place">${place}</span>`)}</p>
+        <p class="line" style="animation-delay:.4s">${esc(l2)}</p>
+        <p class="now">Wherever you are, it’s ${now}. The world kept turning today.</p>
+      </div>
+      <button class="refresh" data-act="rotate">Somewhere else</button>
+      ${navHTML('Continue', true)}
+    </div>`;
+}
+function rotateElse(){
+  const idx = placeBag.draw(1)[0];
+  const [place, l1, l2] = PLACES[idx];
+  const now = new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  $('#dyn').innerHTML =
+    `<p class="line" style="animation-delay:.05s">${l1.replace(place, `<span class="place">${place}</span>`)}</p>
+     <p class="line" style="animation-delay:.3s">${esc(l2)}</p>
+     <p class="now">Wherever you are, it’s ${now}. The world kept turning today.</p>`;
+}
+
+function strangersHTML(){
+  const shown = [];
+  if (sessionNotes.length) shown.push({ t: sessionNotes[sessionNotes.length - 1], mine: true });
+  const pool = NOTES_SEED.slice().sort(() => Math.random() - 0.5);
+  for (const t of pool){ if (shown.length >= 4) break; shown.push({ t, mine: false }); }
+  return shown.map((n, i) =>
+    `<div class="card${n.mine ? ' mine' : ''}" style="animation-delay:${i * 0.1}s">${esc(n.t)}</div>`).join('');
+}
+function renderNote(ch){
+  stage.innerHTML = `
+    <div class="screen">
+      <div class="kicker" tabindex="-1">${ch.name}</div>
+      <p class="lead">${esc(ch.lead)}</p>
+      <div class="note-box">
+        <textarea id="noteInput" maxlength="120" rows="2" placeholder="I made it through today…" aria-label="Leave one sentence, up to 120 characters"></textarea>
+        <button class="btn" data-act="addnote">Leave it here</button>
+      </div>
+      <p class="whisper">Nothing here is saved. When you leave, it disappears — like breath on glass.</p>
+      <div class="strangers" id="dyn">${strangersHTML()}</div>
+      <button class="refresh" data-act="shuffle">Read another</button>
+      ${navHTML('I’m ready to go', true)}
+    </div>`;
+}
+function addNote(){
+  const t = $('#noteInput');
+  if (!t) return;
+  const v = t.value.trim();
+  if (v){ sessionNotes.push(v); }
+  t.value = '';
+  $('#dyn').innerHTML = strangersHTML();
+  t.setAttribute('placeholder', v ? 'It’s here now. Thank you.' : 'I made it through today…');
+}
+function shuffleNotes(){ $('#dyn').innerHTML = strangersHTML(); }
+
+function renderOutro(){
+  stage.innerHTML = `
+    <div class="screen">
+      <p class="single" style="max-width:28ch">Thank you for spending these moments with yourself.</p>
+      <p class="lead" style="margin-bottom:44px">The world can wait a little longer.<br>Come back whenever you need somewhere quiet.</p>
+      <div class="nav">
+        <button class="back" data-act="prev">Back</button>
+        <button class="btn" data-act="restart">Begin again</button>
+      </div>
+    </div>`;
+  stage.querySelector('.single').setAttribute('tabindex', '-1');
+}
+
+/* ---------- Navigation ---------- */
+function render(){
+  if (step === 0) renderIntro();
+  else if (step <= N) renderChapter();
+  else renderOutro();
+  updateChrome();
+  requestAnimationFrame(() => {
+    const f = stage.querySelector('[tabindex="-1"]');
+    if (f) f.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
+}
+function goto(n){ step = Math.max(0, Math.min(N + 1, n)); render(); }
+function next(){ if (step <= N) goto(step + 1); }
+function prev(){ if (step > 0) goto(step - 1); }
+
+function updateChrome(){
+  const inJourney = step >= 1 && step <= N;
+  document.body.classList.toggle('in-journey', inJourney);
+  const dots = $('#dots');
+  if (inJourney){
+    dots.classList.add('show');
+    dots.innerHTML = CHAPTERS.map((c, i) =>
+      `<button class="${i === step - 1 ? 'on' : ''}" data-act="goto" data-step="${i + 1}" aria-label="${c.name}"></button>`).join('');
+  } else {
+    dots.classList.remove('show');
+    dots.innerHTML = '';
+  }
+}
+
+/* ---------- Theme ---------- */
+function toggleTheme(){
+  const cur = document.documentElement.getAttribute('data-theme');
+  document.documentElement.setAttribute('data-theme', cur === 'dark' ? 'light' : 'dark');
+  refreshMoteColor();
+}
+
+/* ---------- Ambience (synthesised, off by default) ---------- */
+const Amb = (() => {
+  let ctx = null, nodes = null, current = 'off';
+  function noiseBuffer(type){
+    const len = ctx.sampleRate * 4, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    if (type === 'brown'){ let last = 0; for (let i = 0; i < len; i++){ const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 3.2; } }
+    else if (type === 'pink'){ let b0=0,b1=0,b2=0; for (let i=0;i<len;i++){ const w=Math.random()*2-1; b0=0.99765*b0+w*0.0990460; b1=0.96300*b1+w*0.2965164; b2=0.57000*b2+w*1.0526913; d[i]=(b0+b1+b2+w*0.1848)*0.5; } }
+    else { for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1; }
+    return buf;
+  }
+  const RECIPE = {
+    rain:  { n:'white', filter:{t:'highpass', f:780}, extra:{t:'lowpass', f:5200}, swell:{rate:.12, depth:.22, base:.42}, gain:.16 },
+    ocean: { n:'brown', filter:{t:'lowpass', f:480}, swell:{rate:.07, depth:.4, base:.5}, gain:.24 },
+    wind:  { n:'pink',  filter:{t:'bandpass', f:520, q:.7}, sweep:{rate:.05, depth:300, base:520}, swell:{rate:.09, depth:.3, base:.5}, gain:.2 },
+    hush:  { n:'pink',  filter:{t:'lowpass', f:1400}, swell:{rate:.06, depth:.12, base:.5}, gain:.12 }
+  };
+  function stop(){
+    if (!nodes) { current = 'off'; return; }
+    const g = nodes.master, c = ctx.currentTime;
+    g.gain.cancelScheduledValues(c); g.gain.setValueAtTime(g.gain.value, c); g.gain.linearRampToValueAtTime(0, c + 1.4);
+    const dead = nodes; setTimeout(() => { try { dead.src.stop(); } catch(e){} try { dead.src.disconnect(); } catch(e){} }, 1600);
+    nodes = null; current = 'off';
+  }
+  function play(name){
+    if (name === current) return;
+    if (!ctx){ try { ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){ return; } }
+    if (ctx.state === 'suspended') ctx.resume();
+    stop();
+    if (name === 'off') return;
+    const r = RECIPE[name]; if (!r) return;
+    const src = ctx.createBufferSource(); src.buffer = noiseBuffer(r.n); src.loop = true;
+    const filter = ctx.createBiquadFilter(); filter.type = r.filter.t; filter.frequency.value = r.filter.f; if (r.filter.q) filter.Q.value = r.filter.q;
+    let tail = filter;
+    if (r.extra){ const e = ctx.createBiquadFilter(); e.type = r.extra.t; e.frequency.value = r.extra.f; filter.connect(e); tail = e; }
+    const amp = ctx.createGain(); amp.gain.value = r.swell.base;
+    const master = ctx.createGain(); master.gain.value = 0;
+    src.connect(filter); tail.connect(amp); amp.connect(master); master.connect(ctx.destination);
+    // slow swell
+    const lfo = ctx.createOscillator(); lfo.frequency.value = r.swell.rate;
+    const lg = ctx.createGain(); lg.gain.value = r.swell.depth; lfo.connect(lg); lg.connect(amp.gain); lfo.start();
+    let sweepOsc = null;
+    if (r.sweep){ sweepOsc = ctx.createOscillator(); sweepOsc.frequency.value = r.sweep.rate; const sg = ctx.createGain(); sg.gain.value = r.sweep.depth; sweepOsc.connect(sg); sg.connect(filter.frequency); sweepOsc.start(); }
+    src.start();
+    const c = ctx.currentTime; master.gain.linearRampToValueAtTime(r.gain, c + 2.2);
+    nodes = { src, master, lfo, sweepOsc };
+    current = name;
+  }
+  return { play, get current(){ return current; } };
+})();
+
+function setAmbience(name, btn){
+  Amb.play(name);
+  document.querySelectorAll('#ambMenu button').forEach(b => b.setAttribute('aria-pressed', String(b === btn)));
+}
+function toggleSoundMenu(){ $('#ambMenu').classList.toggle('open'); }
+
+/* ---------- Floating motes ---------- */
+let moteColor = 'rgba(190,150,100,0.5)';
+function refreshMoteColor(){
+  moteColor = getComputedStyle(document.documentElement).getPropertyValue('--mote').trim() || moteColor;
+}
+(function motes(){
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce) return;
+  const c = $('#motes'), x = c.getContext('2d');
+  let w, h, dpr, parts = [], running = true;
+  function size(){
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = c.width = innerWidth * dpr; h = c.height = innerHeight * dpr;
+    c.style.width = innerWidth + 'px'; c.style.height = innerHeight + 'px';
+    const count = Math.min(46, Math.round(innerWidth / 34));
+    parts = Array.from({ length: count }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      r: (Math.random() * 1.6 + 0.4) * dpr,
+      vy: (Math.random() * 0.22 + 0.05) * dpr,
+      drift: Math.random() * 0.5 + 0.15,
+      ph: Math.random() * Math.PI * 2,
+      a: Math.random() * 0.5 + 0.25
+    }));
+  }
+  function frame(t){
+    if (!running) return;
+    x.clearRect(0, 0, w, h);
+    for (const p of parts){
+      p.y -= p.vy; p.ph += 0.005;
+      const dx = Math.sin(p.ph) * p.drift * dpr;
+      if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w; }
+      x.beginPath();
+      x.globalAlpha = p.a;
+      x.fillStyle = moteColor;
+      x.shadowBlur = 6 * dpr; x.shadowColor = moteColor;
+      x.arc(p.x + dx, p.y, p.r, 0, Math.PI * 2);
+      x.fill();
+    }
+    x.globalAlpha = 1; x.shadowBlur = 0;
+    requestAnimationFrame(frame);
+  }
+  refreshMoteColor();
+  size(); requestAnimationFrame(frame);
+  addEventListener('resize', size);
+  document.addEventListener('visibilitychange', () => {
+    running = !document.hidden;
+    if (running) requestAnimationFrame(frame);
+  });
+})();
+
+/* ---------- Footer greeting: one per day ---------- */
+(function greet(){
+  const d = new Date();
+  const day = Math.floor(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 864e5);
+  $('#greeting').textContent = GREETINGS[day % GREETINGS.length];
+})();
+
+/* ---------- Events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  if (!t) { if (!e.target.closest('.tools')) $('#ambMenu').classList.remove('open'); return; }
+  switch (t.dataset.act) {
+    case 'next':    next(); break;
+    case 'prev':    prev(); break;
+    case 'restart': goto(0); break;
+    case 'regen':   refreshChapterBody(); break;
+    case 'rotate':  rotateElse(); break;
+    case 'shuffle': shuffleNotes(); break;
+    case 'addnote': addNote(); break;
+    case 'goto':    goto(+t.dataset.step); break;
+    case 'theme':   toggleTheme(); break;
+    case 'sound':   toggleSoundMenu(); break;
+    case 'amb':     setAmbience(t.dataset.amb, t); break;
+  }
+});
+
+document.addEventListener('keydown', e => {
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'textarea' || tag === 'input'){
+    if (e.target.id === 'noteInput' && e.key === 'Enter'){ e.preventDefault(); addNote(); }
+    return;
+  }
+  if (tag === 'button' && (e.key === 'Enter' || e.key === ' ')) return; // let the button act
+  if (e.key === 'ArrowRight' || e.key === 'Enter'){ e.preventDefault(); next(); }
+  else if (e.key === 'ArrowLeft'){ e.preventDefault(); prev(); }
+  else if (e.key === 'Escape'){ $('#ambMenu').classList.remove('open'); }
+});
+
+/* ---------- Begin ---------- */
+render();
+</script>
+</body>
+</html>
